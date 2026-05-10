@@ -5,23 +5,31 @@ def search_youtube(query):
 
     ydl_opts = {
         'quiet': True,
-        'extract_flat': True
+        'noplaylist': True
     }
 
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
 
         results = ydl.extract_info(
-            f"ytsearch35:{query}",
+            f"ytsearch30:{query}",
             download=False
         )
 
         videos = []
 
         for entry in results['entries']:
+
+            thumbnail = ""
+
+            thumbnails = entry.get("thumbnails", [])
+
+            if thumbnails:
+                thumbnail = thumbnails[-1].get("url", "")
+
             videos.append({
-                'title': entry.get('title'),
+                'title': entry.get('title', 'Unknown'),
                 'url': f"https://youtube.com/watch?v={entry.get('id')}",
-                'thumbnail': entry.get('thumbnails', [{}])[-1].get('url', ''),
+                'thumbnail': thumbnail,
                 'channel': entry.get('channel', 'Unknown')
             })
 
