@@ -1,11 +1,13 @@
 import customtkinter as ctk
 import threading
+import os
 
 from tkinter import filedialog
 from downloader.download_manager import DownloadManager
 
 from downloader.youtube import search_youtube
 from ui.search_card import SearchCard
+from player.audio_player import AudioPlayer
 
 ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("green")
@@ -21,6 +23,7 @@ class App(ctk.CTk):
 
         self.download_path = ""
         self.download_queue = []
+        self.player = AudioPlayer()
 
         self.build_ui()
 
@@ -64,6 +67,19 @@ class App(ctk.CTk):
         )
         self.results_frame.pack(fill="both", expand=True, padx=20, pady=20)
 
+        # LIBRARY FRAME
+        self.library_frame = ctk.CTkScrollableFrame(
+            self.main_frame,
+            label_text="Biblioteca",
+            height=250
+        )
+        self.library_frame.pack(
+            fill="both",
+            expand=True,
+            padx=20,
+            pady=10
+        )
+
         # BOTTOM FRAME
         self.bottom_frame = ctk.CTkFrame(self.main_frame, height=120)
         self.bottom_frame.pack(fill="x", padx=20, pady=10)
@@ -84,6 +100,48 @@ class App(ctk.CTk):
             command=self.start_downloads
         )
         self.download_button.pack(side="right", padx=10, pady=20)
+
+        # PLAYER CONTROLS
+        self.player_frame = ctk.CTkFrame(
+            self.bottom_frame,
+            fg_color="#181818"
+        )
+        self.player_frame.pack(fill="x", padx=10, pady=10)
+
+        # CURRENT SONG
+        self.current_song_label = ctk.CTkLabel(
+            self.player_frame,
+            text="No reproduciendo",
+            font=("Arial", 14)
+        )
+        self.current_song_label.pack(side="left", padx=20)
+
+        # PLAY BUTTON
+        self.play_button = ctk.CTkButton(
+            self.player_frame,
+            text="▶",
+            width=50,
+            command=self.resume_song
+        )
+        self.play_button.pack(side="right", padx=5)
+
+        # PAUSE BUTTON
+        self.pause_button = ctk.CTkButton(
+            self.player_frame,
+            text="⏸",
+            width=50,
+            command=self.pause_song
+        )
+        self.pause_button.pack(side="right", padx=5)
+
+        # STOP BUTTON
+        self.stop_button = ctk.CTkButton(
+            self.player_frame,
+            text="■",
+            width=50,
+            command=self.stop_song
+        )
+        self.stop_button.pack(side="right", padx=5)
 
         # PROGRESS BAR
         self.progress = ctk.CTkProgressBar(self.bottom_frame)
@@ -162,7 +220,7 @@ class App(ctk.CTk):
         for index, song in enumerate(self.download_queue):
 
             self.update_status(
-                "Descargando ({index+1}/{total}) {song['title']}"
+                f"Descargando {index + 1} de {total}: {song['title']}"
             )
 
             manager.download_song(
@@ -171,10 +229,68 @@ class App(ctk.CTk):
             )
 
         self.update_status("Todas las descargas terminaron")
+        self.load_library()
     
     def update_progress(self, value):
         self.progress.set(value)
 
     def update_status(self, text):
         self.status_label.configure(text=text)
+    
+    def load_library(self):
+
+        for widget in self.library_frame.winfo_children():
+            widget.destroy()
+
+        if not self.download_path:
+            return
+
+        files = os.listdir(self.download_path)
+
+        mp3_files = [
+            file for file in files
+            if file.endswith('.mp3')
+        ]
+
+        for song in mp3_files:
+
+            song_path = os.path.join(
+                self.download_path,
+                song
+            )
+
+            button = ctk.CTkButton(
+                self.library_frame,
+                text=song,
+                anchor="w",
+                command=lambda p=song_path: self.play_song(p)
+            )
+
+            button.pack(
+                fill="x",
+                padx=10,
+                pady=5
+            )
+    
+    def play_song(self, song_path):
+
+        self.player.load(song_path)
+        self.player.play()
+        song_name = os.path.basename(song_path)
+
+        self.current_song_label.configure(
+            text=song_name
+        )
+
+    def pause_song(self):
+        self.player.pause()
+
+    def resume_song(self):
+        self.player.resume()
+
+    def stop_song(self):
+        self.player.stop()
+        self.current_song_label.configure(
+            text="No reproduciendo"
+        )
     
