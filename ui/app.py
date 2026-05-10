@@ -53,6 +53,8 @@ class App(ctk.CTk):
         self.main_frame.grid_columnconfigure(1, weight=1)
 
         self.main_frame.grid_rowconfigure(1, weight=1)
+        self.main_frame.grid_rowconfigure(2, weight=1)
+        self.main_frame.grid_rowconfigure(3, weight=0)
 
         # SEARCH BAR
         self.search_entry = ctk.CTkEntry(
@@ -116,16 +118,24 @@ class App(ctk.CTk):
             label_text="Biblioteca",
             height=250
         )
-        self.library_frame.pack(
-            fill="both",
-            expand=True,
+        self.library_frame.grid(
+            row=2,
+            column=0,
+            sticky="nsew",
             padx=20,
             pady=10
         )
 
         # BOTTOM FRAME
         self.bottom_frame = ctk.CTkFrame(self.main_frame, height=120)
-        self.bottom_frame.pack(fill="x", padx=20, pady=10)
+        self.bottom_frame.grid(
+            row=3,
+            column=0,
+            columnspan=2,
+            sticky="ew",
+            padx=20,
+            pady=10
+        )
 
         # PATH BUTTON
         self.path_button = ctk.CTkButton(
