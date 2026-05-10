@@ -1,5 +1,8 @@
 import customtkinter as ctk
+import threading
+
 from tkinter import filedialog
+from downloader.download_manager import DownloadManager
 
 from downloader.youtube import search_youtube
 from ui.search_card import SearchCard
@@ -77,7 +80,8 @@ class App(ctk.CTk):
         self.download_button = ctk.CTkButton(
             self.bottom_frame,
             text="Descargar",
-            fg_color="#1DB954"
+            fg_color="#1DB954",
+            command=self.start_downloads
         )
         self.download_button.pack(side="right", padx=10, pady=20)
 
@@ -126,3 +130,51 @@ class App(ctk.CTk):
         text=f"Agregado: {song['title']}"
         )
         print(self.download_queue)
+    
+    def start_downloads(self):
+
+        if not self.download_queue:
+            self.status_label.configure(
+                text="La cola está vacía"
+            )
+            return
+
+        if not self.download_path:
+            self.status_label.configure(
+                text="Selecciona una carpeta"
+            )
+            return
+
+        threading.Thread(
+            target=self.download_queue_songs,
+            daemon=True
+        ).start()
+    
+    def download_queue_songs(self):
+
+        manager = DownloadManager(
+            progress_callback=self.update_progress,
+            status_callback=self.update_status
+        )
+
+        total = len(self.download_queue)
+
+        for index, song in enumerate(self.download_queue):
+
+            self.update_status(
+                "Descargando ({index+1}/{total}) {song['title']}"
+            )
+
+            manager.download_song(
+                song,
+                self.download_path
+            )
+
+        self.update_status("Todas las descargas terminaron")
+    
+    def update_progress(self, value):
+        self.progress.set(value)
+
+    def update_status(self, text):
+        self.status_label.configure(text=text)
+    
