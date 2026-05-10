@@ -42,7 +42,17 @@ class App(ctk.CTk):
 
         # MAIN AREA
         self.main_frame = ctk.CTkFrame(self)
-        self.main_frame.pack(fill="both", expand=True, padx=10, pady=10)
+        self.main_frame.pack(
+            fill="both",
+            expand=True,
+            padx=10,
+            pady=10
+        )
+
+        self.main_frame.grid_columnconfigure(0, weight=4)
+        self.main_frame.grid_columnconfigure(1, weight=1)
+
+        self.main_frame.grid_rowconfigure(1, weight=1)
 
         # SEARCH BAR
         self.search_entry = ctk.CTkEntry(
@@ -50,7 +60,13 @@ class App(ctk.CTk):
             placeholder_text="Buscar canción o artista",
             height=40
         )
-        self.search_entry.pack(fill="x", padx=20, pady=20)
+        self.search_entry.grid(
+            row=0,
+            column=0,
+            sticky="ew",
+            padx=20,
+            pady=20
+        )
 
         # SEARCH BUTTON
         self.search_button = ctk.CTkButton(
@@ -58,14 +74,41 @@ class App(ctk.CTk):
             text="Buscar",
             command=self.search_music
         )
-        self.search_button.pack(pady=10)
+        self.search_button.grid(
+            row=0,
+            column=1,
+            padx=10,
+            pady=20,
+            sticky="n"
+        )
 
         # RESULTS FRAME
         self.results_frame = ctk.CTkScrollableFrame(
             self.main_frame,
             label_text="Resultados"
         )
-        self.results_frame.pack(fill="both", expand=True, padx=20, pady=20)
+        self.results_frame.grid(
+            row=1,
+            column=0,
+            sticky="nsew",
+            padx=20,
+            pady=10
+        )
+
+        # QUEUE PANEL
+        self.queue_frame = ctk.CTkScrollableFrame(
+            self.main_frame,
+            label_text="Cola de Descargas",
+            width=300
+        )
+
+        self.queue_frame.grid(
+            row=1,
+            column=1,
+            sticky="ns",
+            padx=10,
+            pady=10
+        )
 
         # LIBRARY FRAME
         self.library_frame = ctk.CTkScrollableFrame(
@@ -184,10 +227,40 @@ class App(ctk.CTk):
 
     def add_to_queue(self, song):
         self.download_queue.append(song)
-        self.status_label.configure(
-        text=f"Agregado: {song['title']}"
+        queue_item = ctk.CTkFrame(
+            self.queue_frame,
+            fg_color="#202020",
+            corner_radius=12
         )
-        print(self.download_queue)
+        queue_item.pack(
+            fill="x",
+            padx=5,
+            pady=5
+        )
+        title = ctk.CTkLabel(
+            queue_item,
+            text=song['title'],
+            wraplength=220,
+            justify="left"
+        )
+        title.pack(
+            anchor="w",
+            padx=10,
+            pady=(10, 2)
+        )
+        artist = ctk.CTkLabel(
+            queue_item,
+            text=song['channel'],
+            text_color="#B3B3B3"
+        )
+        artist.pack(
+            anchor="w",
+            padx=10,
+            pady=(0, 10)
+        )
+        self.status_label.configure(
+            text=f"Agregado a cola"
+        )
     
     def start_downloads(self):
 
